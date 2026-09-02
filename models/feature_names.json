@@ -1,0 +1,16 @@
+[
+  "acc_x_ms2",
+  "acc_y_ms2",
+  "acc_z_ms2",
+  "temperature_c",
+  "ppv_mms",
+  "frequency_hz",
+  "psd_value",
+  "geophone_mms",
+  "seismometer_ms2",
+  "vibration_magnitude_ms2",
+  "vibration_horizontal_ms2",
+  "kinetic_energy_proxy",
+  "accel_to_velocity_ratio",
+  "spectral_power_product"
+]

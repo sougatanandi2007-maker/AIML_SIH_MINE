@@ -1,0 +1,32 @@
+# Python environment
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+*.env
+
+# SQLite Database
+*.db
+*.sqlite3
+
+# Data directories (raw datasets downloaded dynamically)
+data/raw/*
+!data/raw/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+data/features/*
+!data/features/.gitkeep
+
+# Saved Models
+models/*.joblib
+!models/.gitkeep
+
+# Backups
+backups/
+
+# OS / IDE
+.vscode/
+.idea/
+.DS_Store
