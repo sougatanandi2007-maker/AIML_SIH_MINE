@@ -1,0 +1,14 @@
+.git
+.github
+.pytest_cache
+__pycache__
+*.pyc
+tests
+notebooks
+scripts
+data/raw
+data/processed
+data/features
+data/test
+mine_monitoring.db
+*.md

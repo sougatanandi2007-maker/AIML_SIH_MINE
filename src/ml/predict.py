@@ -54,8 +54,10 @@ class RiskPredictor:
     Inference engine for real-time mine vibration and subsidence risk classification.
     """
 
-    def __init__(self, model_path: str = DEFAULT_MODEL_PATH):
+    def __init__(self, model_path: Union[str, Path] = DEFAULT_MODEL_PATH):
         self.model_path = Path(model_path)
+        if not self.model_path.is_absolute():
+            self.model_path = PROJECT_ROOT / self.model_path
         if not self.model_path.exists():
             raise FileNotFoundError(
                 f"Model file not found at {self.model_path.resolve()}. "
