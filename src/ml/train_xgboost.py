@@ -48,6 +48,7 @@ from sklearn.preprocessing import StandardScaler, OneHotEncoder, LabelEncoder
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import classification_report, accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
+from sklearn.model_selection import StratifiedKFold, cross_val_predict
 
 from src.features.vibration_features import prepare_ml_features
 from src.ml.train_random_forest import build_preprocessing_pipeline
@@ -80,6 +81,7 @@ def train_xgboost(
     y_train = label_encoder.fit_transform(y_train_raw)
     y_test = label_encoder.transform(y_test_raw)
     class_names = list(label_encoder.classes_)
+    critical_idx = list(label_encoder.classes_).index("CRITICAL") if "CRITICAL" in label_encoder.classes_ else -1
     print(f"[ML] Target Classes Encoded: {dict(zip(range(len(class_names)), class_names))}")
 
     # 4. Build Pipeline
@@ -106,6 +108,21 @@ def train_xgboost(
     print(f"[ML] Fitting XGBoost on {len(X_train)} training samples...")
     model_pipeline.fit(X_train, y_train)
 
+    # 5b. Stratified 5-Fold Cross-Validation on Training Data
+    print("[ML] Running stratified 5-fold cross-validation on training data...")
+    cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+    cv_predictions = cross_val_predict(model_pipeline, X_train, y_train, cv=cv)
+    cv_acc = accuracy_score(y_train, cv_predictions)
+    cv_f1 = f1_score(y_train, cv_predictions, average="macro", zero_division=0)
+    cv_critical_recall = 0.0
+    if critical_idx >= 0:
+        cv_critical_recall = recall_score(
+            y_train == critical_idx, cv_predictions == critical_idx, zero_division=0
+        )
+    print(f"    CV Accuracy:          {cv_acc * 100:.2f}%")
+    print(f"    CV Macro F1:          {cv_f1:.4f}")
+    print(f"    CV CRITICAL Recall:   {cv_critical_recall * 100:.2f}%")
+
     # 6. Evaluate on Test Set
     y_pred = model_pipeline.predict(X_test)
     y_prob = model_pipeline.predict_proba(X_test)
@@ -116,8 +133,11 @@ def train_xgboost(
     f1_macro = f1_score(y_test, y_pred, average="macro", zero_division=0)
 
     # Critical class recall
-    critical_idx = list(label_encoder.classes_).index("CRITICAL") if "CRITICAL" in label_encoder.classes_ else -1
-    critical_recall = recall_score(y_test == critical_idx, y_pred == critical_idx, zero_division=0) if critical_idx >= 0 else 0.0
+    critical_recall = 0.0
+    if critical_idx >= 0:
+        critical_recall = recall_score(
+            y_test == critical_idx, y_pred == critical_idx, zero_division=0
+        )
 
     cm = confusion_matrix(y_test, y_pred)
 
@@ -157,6 +177,9 @@ def train_xgboost(
         "recall": float(rec_macro),
         "f1": float(f1_macro),
         "critical_recall": float(critical_recall),
+        "cv_accuracy": float(cv_acc),
+        "cv_f1": float(cv_f1),
+        "cv_critical_recall": float(cv_critical_recall),
         "confusion_matrix": cm.tolist(),
         "classes": class_names,
         "feature_names": feature_names

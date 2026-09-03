@@ -86,6 +86,32 @@ def compare_and_select_best_model(
         )
     print("=" * 80)
 
+    # 3b. Print Cross-Validation Comparison
+    print("\n" + "-" * 80)
+    print("CROSS-VALIDATION RESULTS (Stratified 5-Fold on Training Data)")
+    print("-" * 80)
+    print(f"{'Model':<18} {'CV Accuracy':<14} {'CV Macro F1':<14} {'CV CRITICAL Recall':<20}")
+    print("-" * 80)
+    for m in [rf_metrics, xgb_metrics]:
+        cv_acc = m.get("cv_accuracy", 0)
+        cv_f1 = m.get("cv_f1", 0)
+        cv_cr = m.get("cv_critical_recall", 0)
+        print(
+            f"{m['model_name']:<18} "
+            f"{cv_acc * 100:>10.2f}%   "
+            f"{cv_f1:>12.4f}  "
+            f"{cv_cr * 100:>16.2f}%"
+        )
+    print("-" * 80)
+
+    # 3c. Data Leakage Warning
+    print("\n[SCIENTIFIC NOTE]")
+    print("  [WARNING] The target label 'Vibration_Level' is a direct threshold partition of PPV.")
+    print("    'kinetic_energy_proxy' (= 0.5 * PPV^2) is a monotonic transform of the target-")
+    print("    determining variable. Very high accuracy is expected but does NOT indicate")
+    print("    genuine predictive capability from independent sensor signals.")
+    print("    This model functions as a calibrated threshold-based alerting system.")
+
     # 4. Model Selection Logic (Safety-First)
     # Primary: critical_recall -> Secondary: f1 -> Tertiary: accuracy
     rf_score = (rf_metrics["critical_recall"], rf_metrics["f1"], rf_metrics["accuracy"])
